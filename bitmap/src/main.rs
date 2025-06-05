@@ -34,8 +34,8 @@ fn user_selection() -> bool {
     println!("enter 0 for encryption, enter 2 for decryption\n");
     let mut buf = String::new();
     match io::stdin().read_line(&mut buf) {
-        Ok(x) => {
-            return buf.parse::<bool>().unwrap();
+        Ok(_) => {
+            return buf.parse::<bool>().unwrap_or_default();
         }
         Err(error) => println!("Error: {error}")
     };
@@ -49,11 +49,26 @@ fn get_message (message: &str) -> String {
 } 
 
 fn retrieve_message(message: &str) -> String {
-
+    let lead = "XXXXXXXXBBBBCCCCOOOO000099999999";
+    return message.strip_prefix(lead).unwrap()
+        .strip_suffix(lead).unwrap().to_string();
 }
 
 fn run_length_encode(message: &str) -> String {
-
+    let mut encoded = String::new();
+    let mut last_char = message.chars().nth(0).unwrap();
+    let mut count : u8 = 0;
+    for message_char in message.char_indices() {
+        if last_char == message_char.1 && count < 9 {
+            count += 1;
+        } else {
+            encoded.push((count + 48) as char);
+            encoded.push(last_char);
+            count = 1;
+        }
+        last_char = message_char.1;
+    }
+    return encoded;
 }
 
 fn run_length_decode(encoded_message: &str) -> String {
