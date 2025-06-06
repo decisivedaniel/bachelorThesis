@@ -37,7 +37,6 @@ fn user_selection() -> u64 {
     let mut buf = String::new();
     match io::stdin().read_line(&mut buf) {
         Ok(_) => {
-            print!("user inputed and read as {}", buf);
             return buf.parse::<u64>().unwrap_or(0);
         }
         Err(error) => println!("Error: {error}")
