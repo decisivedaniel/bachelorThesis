@@ -93,21 +93,22 @@ fn create_wn_pattern(white_noise: &mut String, row_white_noise: &str){
     }
 }
 
-fn create_image_header(bmp : &mut String) {
+fn create_image_header(bmp : &mut Vec<u8>) {
     // signature "BM"
-    bmp.push_str("BM");
+    bmp.push('B' as u8);
+    bmp.push('M' as u8);
 
     // file size 14 + 40 + 1024 = 1078 or 010000110110
     // 0000 0100 0011 0110 or 0x0436
-    bmp.push_str(str::from_utf8(&vec![0x36,0x04,00,00]).unwrap());
+    bmp.append(&mut vec![0x36,0x04,0x00,0x00]);
 
     // reserved field (four bytes hex)
     // 00 00 00 00
-    bmp.push_str(str::from_utf8(&vec![00,00,00,00]).unwrap());
+    bmp.append(&mut vec![0x00,0x00,0x00,0x00]);
 
     // offset pixel data (four bytes int)
     // 54 or 36 00 00 00
-    bmp.push_str(str::from_utf8(&vec![0x36,00,00,00]).unwrap());
+    bmp.append(&mut vec![0x36,0x00,0x00,0x00]);
     
     // Bitmap Header
     // header: 40 or 28 00 00 00
@@ -121,7 +122,7 @@ fn create_image_header(bmp : &mut String) {
     // vertical resolution: 2835 or 13 0B 00 00
     // color palette: 00 00 00 00
     // important colors: 00 00 00 00
-    bmp.push_str(str::from_utf8(&vec![
+    bmp.append(&mut vec![
         0x28, 0x00, 0x00, 0x00,
         0x20, 0x00, 0x00, 0x00,
         0x20, 0x00, 0x00, 0x00,
@@ -133,12 +134,13 @@ fn create_image_header(bmp : &mut String) {
         0x13, 0x0B, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00
-    ]).unwrap());
+    ]);
     
 }
 
 fn create_image(message: &str, white_noise: &str){
-    let mut bmp = String::new();
+    //println!("whiteNoise {}", white_noise);
+    let mut bmp: Vec<u8> = Vec::new();
 
     create_image_header(&mut bmp);
     let mut message_chars = message.chars();
@@ -147,15 +149,15 @@ fn create_image(message: &str, white_noise: &str){
         let mut pixel_value: Vec<u8> = vec![0,0,0];
         if current.1 == 'W' {
             pixel_value[0] = 0xff;
-            pixel_value[1] = 0xff
+            pixel_value[1] = 0xff;
         } else {
             pixel_value[0] = 0x00;
             pixel_value[1] = 0x00;
         }
-        if current.1 == 'B' {
-            pixel_value[2] = 0x00;
-        } else {
+        if current.1 != 'B' {
             pixel_value[2] = 0xff;
+        } else {
+            pixel_value[2] = 0x00;
         }
         if current.0 < message.len() {
             let current_letter = message_chars.next().unwrap();
@@ -174,7 +176,7 @@ fn create_image(message: &str, white_noise: &str){
             pixel_value[1] ^= mod_value;
             pixel_value[2] ^= flag;
         }
-        bmp.push_str(str::from_utf8(&pixel_value).unwrap());
+        bmp.append(&mut pixel_value);
     }
     
     _ = fs::write("output.bmp", bmp);
