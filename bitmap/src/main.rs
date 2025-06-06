@@ -70,6 +70,8 @@ fn run_length_encode(message: &str) -> String {
         }
         last_char = message_char;
     }
+    encoded.push((count + 48) as char);
+    encoded.push(last_char);
     return encoded;
 }
 
