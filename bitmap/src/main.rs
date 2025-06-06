@@ -181,7 +181,35 @@ fn create_image(message: &str, white_noise: &str){
     _ = fs::write("output.bmp", bmp);
 }
 
-fn read_image(encrypted_white_noise: &str, white_noise: &str) {
-
+fn read_image(encrypted_white_noise: &mut String, white_noise: &str) {
+    let image = fs::read("output.bmp").unwrap();
+    let mut image_index = 54;
+    for current in white_noise.chars() {
+        let mut divide: u8 = 0;
+        let mut mod_value: u8 = 0;
+        let mut flag: u8 = 0;
+        let pixel = vec![image[image_index], image[image_index+1], image[image_index+2]];
+        image_index += 3;
+        if current == 'W' {
+            divide = 0xff;
+            mod_value = 0xff;
+        }
+        if current != 'B' {
+            flag = 0xff;
+        }
+        divide ^= pixel[0];
+        mod_value ^= pixel[1];
+        flag ^= pixel[2];
+        if flag > 1 {
+            divide += 8;
+            flag -= 2;
+        }
+        if flag > 0 {
+            mod_value += 8;
+        }
+        divide *= 16;
+        divide += mod_value;
+        encrypted_white_noise.push(divide as char);
+    }
 }
 
