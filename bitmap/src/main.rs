@@ -1,4 +1,6 @@
+use std::fs;
 use std::io;
+use std::str;
 
 fn main() {
     let mut white_noise = String::new();
@@ -9,7 +11,7 @@ fn main() {
 
     create_wn_pattern(&mut white_noise, row_white_noise);
 
-    if response {
+    if response == 0 {
         encrypt(white_noise.as_str(), message.as_str());
     } else {
         decrypt(white_noise.as_str());
@@ -30,16 +32,17 @@ fn decrypt(white_noise: &str) {
     println!("Message {trimmed_message}");
 }
 
-fn user_selection() -> bool {
-    println!("enter 0 for encryption, enter 2 for decryption\n");
+fn user_selection() -> u64 {
+    println!("enter 0 for encryption, enter 1 for decryption\n");
     let mut buf = String::new();
     match io::stdin().read_line(&mut buf) {
         Ok(_) => {
-            return buf.parse::<bool>().unwrap_or_default();
+            print!("user inputed and read as {}", buf.parse::<u64>().unwrap());
+            return buf.parse::<u64>().unwrap_or_default();
         }
         Err(error) => println!("Error: {error}")
     };
-    return true;
+    return 0;
 }
 
 fn get_message (message: &str) -> String {
@@ -58,32 +61,126 @@ fn run_length_encode(message: &str) -> String {
     let mut encoded = String::new();
     let mut last_char = message.chars().nth(0).unwrap();
     let mut count : u8 = 0;
-    for message_char in message.char_indices() {
-        if last_char == message_char.1 && count < 9 {
+    for message_char in message.chars() {
+        if last_char == message_char && count < 9 {
             count += 1;
         } else {
             encoded.push((count + 48) as char);
             encoded.push(last_char);
             count = 1;
         }
-        last_char = message_char.1;
+        last_char = message_char;
     }
     return encoded;
 }
 
 fn run_length_decode(encoded_message: &str) -> String {
-    
+    let mut decoded = String::new();
+    let mut encoded_msg_iterator = encoded_message.chars().peekable();
+    while encoded_msg_iterator.peek().is_some() {
+        let amount = encoded_msg_iterator.next().unwrap().to_digit(10).unwrap();
+        let letter = encoded_msg_iterator.next().unwrap();
+        for _ in 0..amount {
+            decoded.push(letter);
+        }
+    }
+    return decoded;
 }
 
 fn create_wn_pattern(white_noise: &mut String, row_white_noise: &str){
-
+    for _ in 0..32 {
+        white_noise.push_str(row_white_noise);
+    }
 }
 
-fn create_image(encryptedWhiteNoise: &str, whiteNoise: &str){
+fn create_image_header(bmp : &mut String) {
+    // signature "BM"
+    bmp.push_str("BM");
 
+    // file size 14 + 40 + 1024 = 1078 or 010000110110
+    // 0000 0100 0011 0110 or 0x0436
+    bmp.push_str(str::from_utf8(&vec![0x36,0x04,00,00]).unwrap());
+
+    // reserved field (four bytes hex)
+    // 00 00 00 00
+    bmp.push_str(str::from_utf8(&vec![00,00,00,00]).unwrap());
+
+    // offset pixel data (four bytes int)
+    // 54 or 36 00 00 00
+    bmp.push_str(str::from_utf8(&vec![0x36,00,00,00]).unwrap());
+    
+    // Bitmap Header
+    // header: 40 or 28 00 00 00
+    // width: 32 or 20 00 00 00
+    // height: 32 or 20 00 00 00
+    // reserved: 01 00
+    // bits per pixel: 24 or 18 00
+    // compression: 00 00 00 00
+    // size of pixel data: 1024 or 00 04 00 00
+    // horizontal resolution: 2835 or 13 0B 00 00
+    // vertical resolution: 2835 or 13 0B 00 00
+    // color palette: 00 00 00 00
+    // important colors: 00 00 00 00
+    bmp.push_str(str::from_utf8(&vec![
+        0x28, 0x00, 0x00, 0x00,
+        0x20, 0x00, 0x00, 0x00,
+        0x20, 0x00, 0x00, 0x00,
+        0x01, 0x00,
+        0x18, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x04, 0x00, 0x00,
+        0x13, 0x0B, 0x00, 0x00,
+        0x13, 0x0B, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00
+    ]).unwrap());
+    
 }
 
-fn read_image(encryptedWhiteNoise: &str, whiteNoise: &str) {
+fn create_image(message: &str, white_noise: &str){
+    let mut bmp = String::new();
+
+    create_image_header(&mut bmp);
+    let mut message_chars = message.chars();
+    // Pixel Data
+    for current in white_noise.char_indices() {
+        let mut pixel_value: Vec<u8> = vec![0,0,0];
+        if current.1 == 'W' {
+            pixel_value[0] = 0xff;
+            pixel_value[1] = 0xff
+        } else {
+            pixel_value[0] = 0x00;
+            pixel_value[1] = 0x00;
+        }
+        if current.1 == 'B' {
+            pixel_value[2] = 0x00;
+        } else {
+            pixel_value[2] = 0xff;
+        }
+        if current.0 < message.len() {
+            let current_letter = message_chars.next().unwrap();
+            let mut divide = current_letter as u8 / 16;
+            let mut mod_value = current_letter as u8 % 16; 
+            let mut flag = 0;
+            if divide >= 8 {
+                divide -= 8;
+                flag += 2;
+            }
+            if mod_value >= 8 {
+                mod_value -= 8;
+                flag += 1;
+            }
+            pixel_value[0] ^= divide;
+            pixel_value[1] ^= mod_value;
+            pixel_value[2] ^= flag;
+        }
+        bmp.push_str(str::from_utf8(&pixel_value).unwrap());
+    }
+    
+    _ = fs::write("output.bmp", bmp);
+}
+
+fn read_image(encrypted_white_noise: &str, white_noise: &str) {
 
 }
 
