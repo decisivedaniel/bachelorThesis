@@ -4,7 +4,7 @@ use std::str;
 
 fn main() {
     let mut white_noise = String::new();
-    let row_white_noise = "WWWWWWWWBBBBBBBBWWWWBBBBWWBBBWW";
+    let row_white_noise = "WWWWWWWWBBBBBBBBWWWWBBBBWWBBBWWR";
     let message = String::from("Reading Dilbert strips or encoding Elbonian messages are not good excuses for failing the XBC009 final exam.");
 
     let response = user_selection();
