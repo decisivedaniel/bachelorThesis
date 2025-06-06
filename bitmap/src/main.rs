@@ -33,12 +33,12 @@ fn decrypt(white_noise: &str) {
 }
 
 fn user_selection() -> u64 {
-    println!("enter 0 for encryption, enter 1 for decryption\n");
+    println!("enter 0 for encryption, enter 1 for decryption");
     let mut buf = String::new();
     match io::stdin().read_line(&mut buf) {
         Ok(_) => {
-            print!("user inputed and read as {}", buf.parse::<u64>().unwrap());
-            return buf.parse::<u64>().unwrap_or_default();
+            print!("user inputed and read as {}", buf);
+            return buf.parse::<u64>().unwrap_or(0);
         }
         Err(error) => println!("Error: {error}")
     };
