@@ -77,8 +77,11 @@ fn run_length_decode(encoded_message: &str) -> String {
     let mut decoded = String::new();
     let mut encoded_msg_iterator = encoded_message.chars().peekable();
     while encoded_msg_iterator.peek().is_some() {
-        let amount = encoded_msg_iterator.next().unwrap().to_digit(10).unwrap();
+        let amount = encoded_msg_iterator.next().unwrap().to_digit(10).unwrap_or(0);
         let letter = encoded_msg_iterator.next().unwrap();
+        if letter == 0x00 as char {
+            break;
+        }
         for _ in 0..amount {
             decoded.push(letter);
         }
