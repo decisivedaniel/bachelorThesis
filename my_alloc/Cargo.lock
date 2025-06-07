@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "alloc"
+name = "my_alloc"
 version = "0.1.0"
