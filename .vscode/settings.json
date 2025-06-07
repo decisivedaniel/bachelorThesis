@@ -1,5 +1,6 @@
 {
     "rust-analyzer.linkedProjects": [
-        "bitmap/Cargo.toml"
+        "bitmap/Cargo.toml",
+        "alloc/Cargo.toml"
     ]
 }
