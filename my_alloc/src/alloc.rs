@@ -18,13 +18,13 @@ extern "C" {
 pub type size_t = libc::c_ulong;
 pub type __intptr_t = libc::c_long;
 pub type intptr_t = __intptr_t;
-#[derive(Copy, Clone, BitfieldStruct)]
-#[repr(C)]
-pub struct 
-MemoryDescriptor {
-    #[bitfield(name = "inUse", ty = "size_t", bits = "0..=0")]
-    #[bitfield(name = "lengthToNext", ty = "size_t", bits = "1..=63")]
-    pub inUse_lengthToNext: [u8; 8],
+
+#[bitfield(u64)]
+struct MemoryDescriptor {
+    #[bits(1)]
+    in_use : bool,
+    #[bits(63)]
+    length_to_next: size_t,
 }
 pub type memDesc_t = MemoryDescriptor;
 #[no_mangle]
@@ -63,7 +63,7 @@ pub unsafe extern "C" fn calMemNeeded(mut dataSize: size_t) -> size_t {
 }
 #[no_mangle]
 pub unsafe extern "C" fn getNext(mut curr: *mut memDesc_t) -> *mut memDesc_t {
-    return (curr as *mut libc::c_void).offset((*curr).lengthToNext() as isize)
+    return (curr as *mut libc::c_void).offset((*curr).length_to_next() as isize)
         as *mut memDesc_t;
 }
 #[no_mangle]
@@ -74,8 +74,8 @@ pub unsafe extern "C" fn findFreedSpace(
     if current >= heap_end as *mut memDesc_t {
         return current;
     }
-    if (*current).inUse() as libc::c_int == 0 as libc::c_int
-        && (*current).lengthToNext() >= neededSpace
+    if !(*current).in_use() 
+        && (*current).length_to_next() >= neededSpace
     {
         return current;
     }
@@ -85,11 +85,11 @@ pub unsafe extern "C" fn findFreedSpace(
 pub unsafe extern "C" fn addFreeSection(mut toFree: *mut memDesc_t) {
     if lastFreePosition.is_null() {
         let ref mut fresh0 = *toFree.offset(1 as libc::c_int as isize);
-        (*fresh0).set_lengthToNext(0 as libc::c_int as size_t);
+        (*fresh0).set_length_to_next(0 as size_t);
     } else {
         let ref mut fresh1 = *toFree.offset(1 as libc::c_int as isize);
         (*fresh1)
-            .set_lengthToNext(
+            .set_length_to_next(
                 (lastFreePosition as *mut libc::c_void).offset_from(heap_start)
                     as libc::c_long as size_t,
             );
@@ -99,7 +99,7 @@ pub unsafe extern "C" fn addFreeSection(mut toFree: *mut memDesc_t) {
 #[no_mangle]
 pub unsafe extern "C" fn getNextFree(mut curr: *mut memDesc_t) -> *mut memDesc_t {
     return heap_start
-        .offset((*curr.offset(1 as libc::c_int as isize)).lengthToNext() as isize)
+        .offset((*curr.offset(1 as libc::c_int as isize)).length_to_next() as isize)
         as *mut memDesc_t;
 }
 #[no_mangle]
@@ -119,7 +119,7 @@ pub unsafe extern "C" fn removeFree(
     if next == freeToRm {
         let ref mut fresh2 = *curr.offset(1 as libc::c_int as isize);
         (*fresh2)
-            .set_lengthToNext((*next.offset(1 as libc::c_int as isize)).lengthToNext());
+            .set_length_to_next((*next.offset(1 as libc::c_int as isize)).length_to_next());
         return;
     } else {
         return removeFree(getNextFree(curr), freeToRm)
@@ -133,10 +133,10 @@ pub unsafe extern "C" fn newFindFreed(
     if current.is_null() {
         return heap_end as *mut memDesc_t;
     }
-    if (*current).lengthToNext() >= neededSpace {
+    if (*current).length_to_next() >= neededSpace {
         return current;
     }
-    if (*current.offset(1 as libc::c_int as isize)).lengthToNext()
+    if (*current.offset(1 as libc::c_int as isize)).length_to_next()
         == 0 as libc::c_int as libc::c_ulong
     {
         return heap_end as *mut memDesc_t;
@@ -161,14 +161,14 @@ pub unsafe extern "C" fn mymalloc(mut size: size_t) -> *mut libc::c_void {
     currMemPlace = newFindFreed(lastFreePosition, neededSpace);
     if currMemPlace < heap_end as *mut memDesc_t {
         removeFree(lastFreePosition, currMemPlace);
-        (*currMemPlace).set_inUse(1 as libc::c_int as size_t);
-        if neededSpace < (*currMemPlace).lengthToNext() {
+        (*currMemPlace).set_in_use(true);
+        if neededSpace < (*currMemPlace).length_to_next() {
             let mut nextLocation: *mut memDesc_t = getNext(currMemPlace);
-            (*currMemPlace).set_lengthToNext(neededSpace);
+            (*currMemPlace).set_length_to_next(neededSpace);
             let mut newLocation: *mut memDesc_t = getNext(currMemPlace);
-            (*newLocation).set_inUse(0 as libc::c_int as size_t);
+            (*newLocation).set_in_use(false);
             (*newLocation)
-                .set_lengthToNext(
+                .set_length_to_next(
                     (nextLocation as *mut libc::c_void)
                         .offset_from(newLocation as *mut libc::c_void) as libc::c_long
                         as size_t,
@@ -191,11 +191,11 @@ pub unsafe extern "C" fn mymalloc(mut size: size_t) -> *mut libc::c_void {
             .wrapping_add(increaseMemory) as size_t as size_t;
     }
     let mut newMemoryMeta: *mut memDesc_t = heap_end as *mut memDesc_t;
-    (*newMemoryMeta).set_inUse(1 as libc::c_int as size_t);
-    (*newMemoryMeta).set_lengthToNext(neededSpace);
+    (*newMemoryMeta).set_in_use(true);
+    (*newMemoryMeta).set_length_to_next(neededSpace);
     currentFreeMemory = (currentFreeMemory as libc::c_ulong)
-        .wrapping_sub((*newMemoryMeta).lengthToNext()) as size_t as size_t;
-    heap_end = heap_end.offset((*newMemoryMeta).lengthToNext() as isize);
+        .wrapping_sub((*newMemoryMeta).length_to_next()) as size_t as size_t;
+    heap_end = heap_end.offset((*newMemoryMeta).length_to_next() as isize);
     lastMemPosition = newMemoryMeta;
     return newMemoryMeta.offset(1 as libc::c_int as isize) as *mut libc::c_void;
 }
@@ -225,11 +225,11 @@ pub unsafe extern "C" fn mergeFreeSections() {
     while currMem != heap_end as *mut memDesc_t {
         let mut nextMem: *mut memDesc_t = getNext(currMem);
         while nextMem as *mut libc::c_void <= heap_end
-            && (*nextMem).inUse() as libc::c_int == 0 as libc::c_int
+            && !(*nextMem).in_use() 
         {
             (*currMem)
-                .set_lengthToNext(
-                    (*currMem).lengthToNext() + (*nextMem).lengthToNext() as size_t,
+                .set_length_to_next(
+                    (*currMem).length_to_next() + (*nextMem).length_to_next() as size_t,
                 );
             removeFree(lastFreePosition, nextMem);
             if lastMemPosition == nextMem {
@@ -243,13 +243,13 @@ pub unsafe extern "C" fn mergeFreeSections() {
 #[no_mangle]
 pub unsafe extern "C" fn unmap() {
     let mut overfilledChunks: size_t = (*lastMemPosition)
-        .lengthToNext()
+        .length_to_next()
         .wrapping_div(memoryIncrement);
     overfilledChunks = (overfilledChunks as libc::c_ulong)
         .wrapping_sub(1 as libc::c_int as libc::c_ulong) as size_t as size_t;
     (*lastMemPosition)
-        .set_lengthToNext(
-            (*lastMemPosition).lengthToNext()
+        .set_length_to_next(
+            (*lastMemPosition).length_to_next()
                 - overfilledChunks.wrapping_mul(memoryIncrement) as size_t,
         );
     heap_end = getNext(lastMemPosition) as *mut libc::c_void;
@@ -266,10 +266,10 @@ pub unsafe extern "C" fn myfree(mut ptr: *mut libc::c_void) {
     let mut toFree: *mut memDesc_t = ptr
         .offset(-(::core::mem::size_of::<memDesc_t>() as libc::c_ulong as isize))
         as *mut memDesc_t;
-    (*toFree).set_inUse(0 as libc::c_int as size_t);
+    (*toFree).set_in_use(false);
     addFreeSection(toFree);
-    if (*lastMemPosition).inUse() as libc::c_int == 0 as libc::c_int
-        && (*lastMemPosition).lengthToNext().wrapping_div(memoryIncrement)
+    if !(*lastMemPosition).in_use()
+        && (*lastMemPosition).length_to_next().wrapping_div(memoryIncrement)
             > 4 as libc::c_int as libc::c_ulong
     {
         unmap();
@@ -291,7 +291,7 @@ pub unsafe extern "C" fn myrealloc(
         .offset(-(::core::mem::size_of::<memDesc_t>() as libc::c_ulong as isize))
         as *mut memDesc_t;
     let mut neededSpace: size_t = calMemNeeded(size);
-    if neededSpace <= (*currMem).lengthToNext() {
+    if neededSpace <= (*currMem).length_to_next() {
         return ptr
     } else {
         let mut newLocation: *mut libc::c_void = mymalloc(size);
@@ -299,7 +299,7 @@ pub unsafe extern "C" fn myrealloc(
             newLocation,
             ptr,
             (*currMem)
-                .lengthToNext()
+                .length_to_next()
                 .wrapping_sub(::core::mem::size_of::<memDesc_t>() as libc::c_ulong),
         );
         myfree(ptr);
