@@ -1,6 +1,8 @@
 use libc::{sbrk, size_t, ssize_t};
 use std::slice;
 
+mod alloc;
+
 struct MemoryDescriptor {
     is_free : bool,
     to_next : u32
@@ -21,14 +23,11 @@ impl Memory {
             free_size: 0,
             last_mem_position: 0,
             last_free_position: 0,
-            storage: Vec::<MemoryDescriptor>::new().reserve(MEMORY_INCREMENT)
+            storage: Vec::<MemoryDescriptor>::new()
         }
     }
 }
 
-fn get_memory() -> Memory {
-    if
-}
 static mut CURRENT_MEMORY_SIZE : u32 = 0;
 static mut CURRENT_FREE_MEMORY : u32 = 0;
 static MEMORY_INCREMENT : u32 = 4096;
@@ -43,13 +42,12 @@ fn main() {
 
 #[unsafe(no_mangle)]
 pub extern "C" 
-fn mymalloc(size : size_t) -> *mut libc::c_void{
-    if size == 0 {return 0 as *mut libc::c_void;}
+fn mymalloc(size : size_t) {
+    if size == 0 {return;}
     if unsafe{CURRENT_MEMORY_SIZE == 0} {
         unsafe {
             STORAGE.reserve(MEMORY_INCREMENT.try_into().unwrap());
+            mymalloc(64);
         }
     }
-
-    unsafe {return *mut STORAGE[0].;}
 }

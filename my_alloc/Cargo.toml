@@ -1,7 +1,8 @@
 [package]
-name = "my_alloc"
+name = "alloc"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 libc = "0.2"
+bitfield-struct = "0.11"

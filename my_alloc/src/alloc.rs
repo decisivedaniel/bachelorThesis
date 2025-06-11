@@ -1,3 +1,5 @@
+use bitfield_struct::bitfield;
+
 extern "C" {
     fn exit(_: libc::c_int) -> !;
     fn memcpy(
