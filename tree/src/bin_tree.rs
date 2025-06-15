@@ -19,11 +19,37 @@ where T: Copy + Eq + PartialOrd {
     }
 
     pub fn min(&self) -> Option<T> {
-        panic!("Not Implemented");
+        let mut current = &self.root;
+        while current.is_some() {
+            if current.as_ref().unwrap().left.is_some() {
+                current = &current.as_ref().unwrap().left;
+            }
+            else {
+                println!("Broke before reaching the end");
+                break;
+            }
+        }
+        match current {
+            Some(x) => Some(x.value),
+            None => None
+        }
     }
 
     pub fn max(&self) -> Option<T> {
-        panic!("Not Implemented");
+        let mut current = &self.root;
+        while current.is_some() {
+            if current.as_ref().unwrap().right.is_some() {
+                current = &current.as_ref().unwrap().right;
+            }
+            else {
+                println!("Broke before reaching the end");
+                break;
+            }
+        }
+        match current {
+            Some(x) => Some(x.value),
+            None => None
+        }
     }
 
     pub fn insert(&mut self, value : T) {
@@ -37,7 +63,6 @@ where T: Copy + Eq + PartialOrd {
                 current = &mut current.as_mut().unwrap().right;
             }
             else {
-                println!("Broke before reaching the end");
                 break;
             }
         }
@@ -47,11 +72,9 @@ where T: Copy + Eq + PartialOrd {
                 right : None
         }));
         if current.is_none() {
-            println!("Set root");
             self.root = new_node
         }
         else if current.as_ref().unwrap().value < value {
-            println!("Set right node");
             let left = current.as_mut().unwrap().left.take();
             current.replace(Box::new(Node {
                 value : current.as_ref().unwrap().value,
@@ -60,7 +83,6 @@ where T: Copy + Eq + PartialOrd {
             }));
         }
         else {
-            println!("Set left node");
             let right = current.as_mut().unwrap().right.take();
             current.replace(Box::new(Node {
                 value : current.as_ref().unwrap().value,
@@ -98,23 +120,55 @@ where T: Copy + Eq + PartialOrd {
 mod tests {
     use super::*;
 
+
     #[test]
-    fn basic() {
+    fn min_max () {
         let mut tree = BinTree::<u64>::new();
+        
+        assert_eq!(tree.min(), None);
+        assert_eq!(tree.max(), None);
+        
+        tree.insert(5);
+
+        assert_eq!(tree.min(), Some(5));
+        assert_eq!(tree.max(), Some(5));
+
+        tree.insert(2);
+        tree.insert(9);
+
+        assert_eq!(tree.max(), Some(9));
+        assert_eq!(tree.min(), Some(2));
+    }
+
+    #[test]
+    fn contain() {
+        let mut tree = BinTree::<u64>::new();
+        
         tree.insert(5);
         tree.insert(2);
         tree.insert(9);
 
-        //assert_eq!(tree.max(), Some(9));
-        //assert_eq!(tree.min(), Some(2));
 
         assert!(tree.contains(9), "tree should contain 9");
         assert!(tree.contains(2), "tree should contain 2");
         assert!(tree.contains(5), "tree should contain 5");
         assert!(!tree.contains(4), "tree should not contain 4");
+    }
 
-        //tree.delete(5);
+    #[test]
+    fn delete() {
+        
+        let mut tree = BinTree::<u64>::new();
+        
+        tree.insert(5);
+        tree.insert(2);
+        tree.insert(9);
 
-        //assert_eq!(tree.contains(5), false);
+        assert!(tree.contains(5), "tree should contain 5");
+
+        tree.delete(5);
+
+        assert!(!tree.contains(5));
+        assert!(tree.contains(9));
     }
 }
