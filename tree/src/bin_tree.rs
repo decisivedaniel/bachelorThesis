@@ -27,16 +27,18 @@ where T: Copy + Eq + PartialOrd {
     }
 
     pub fn insert(&mut self, value : T) {
-        let mut last : &mut Option<Box<Node<T>>> = &mut None;
         let mut current = &mut self.root;
         while current.is_some() {
-            //last = current;
-            if current.as_deref_mut().unwrap().value == value {return;}
-            else if current.as_ref().unwrap().value < value {
+            if current.as_ref().unwrap().value == value {return;}
+            else if current.as_ref().unwrap().value > value && current.as_ref().unwrap().left.is_some() {
                 current = &mut current.as_mut().unwrap().left;
             }
-            else {
+            else if current.as_ref().unwrap().value < value && current.as_ref().unwrap().right.is_some() {
                 current = &mut current.as_mut().unwrap().right;
+            }
+            else {
+                println!("Broke before reaching the end");
+                break;
             }
         }
         let new_node = Some(Box::new(Node {
@@ -44,18 +46,27 @@ where T: Copy + Eq + PartialOrd {
                 left : None,
                 right : None
         }));
-        if last.is_none() {
+        if current.is_none() {
+            println!("Set root");
             self.root = new_node
         }
         else if current.as_ref().unwrap().value < value {
-            current.take().map(|mut node| {
-                node.right = new_node;
-            });
+            println!("Set right node");
+            let left = current.as_mut().unwrap().left.take();
+            current.replace(Box::new(Node {
+                value : current.as_ref().unwrap().value,
+                left : left,
+                right : new_node
+            }));
         }
         else {
-            current.take().map(|mut node| {
-                node.left = new_node;
-            });
+            println!("Set left node");
+            let right = current.as_mut().unwrap().right.take();
+            current.replace(Box::new(Node {
+                value : current.as_ref().unwrap().value,
+                left : new_node,
+                right : right
+            }));
         }
     }
 
@@ -97,8 +108,10 @@ mod tests {
         //assert_eq!(tree.max(), Some(9));
         //assert_eq!(tree.min(), Some(2));
 
-        assert_eq!(tree.contains(5), true, "tree should contain 5");
-        assert_eq!(tree.contains(4), false, "tree should not contain 4");
+        assert!(tree.contains(9), "tree should contain 9");
+        assert!(tree.contains(2), "tree should contain 2");
+        assert!(tree.contains(5), "tree should contain 5");
+        assert!(!tree.contains(4), "tree should not contain 4");
 
         //tree.delete(5);
 
