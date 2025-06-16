@@ -1,5 +1,4 @@
 
-#[derive(PartialEq)]
 pub struct Node<T>
 where T: Copy + Eq + PartialOrd {
     left : Option<Box<Node<T>>>,
@@ -19,34 +18,28 @@ where T: Copy + Eq + PartialOrd {
     }
 
     pub fn min(&self) -> Option<T> {
+        let mut last: &Option<Box<Node<T>>> = &None;
         let mut current = &self.root;
         while current.is_some() {
-            if current.as_ref().unwrap().left.is_some() {
-                current = &current.as_ref().unwrap().left;
-            }
-            else {
-                println!("Broke before reaching the end");
-                break;
-            }
+            last = current;
+            current = &current.as_ref().unwrap().left;
         }
-        match current {
+        match last {
             Some(x) => Some(x.value),
             None => None
         }
     }
 
     pub fn max(&self) -> Option<T> {
+        let mut last: &Option<Box<Node<T>>> = &None;
         let mut current = &self.root;
         while current.is_some() {
+            last = current;
             if current.as_ref().unwrap().right.is_some() {
                 current = &current.as_ref().unwrap().right;
             }
-            else {
-                println!("Broke before reaching the end");
-                break;
-            }
         }
-        match current {
+        match last {
             Some(x) => Some(x.value),
             None => None
         }
