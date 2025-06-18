@@ -3,7 +3,7 @@
 #include <string.h>
 
 char *getMessage(char *message);
-char *retrieveMessage(char *message);
+char *retrieveMessage(const char *message);
 char *runLengthEncode(char *message);
 void createWNPattern(char* whiteNoise, char* rowWhiteNoise);
 char *encryptMessage(char* message, int messageLength, char* whiteNoise);
@@ -78,7 +78,7 @@ char* getMessage(char* message)
 }
 
 
-char *retrieveMessage(char *message)
+char *retrieveMessage(const char *message)
 {
     char *new = malloc(200);
     int messageLength = strlen(message) - 32;
