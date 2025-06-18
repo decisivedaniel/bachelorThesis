@@ -1,16 +1,16 @@
 use bitfield_struct::bitfield;
 
 extern "C" {
-    fn exit(_: libc::c_int) -> !;
+    fn exit(n: libc::c_int) -> !;
     fn memcpy(
-        _: *mut libc::c_void,
-        _: *const libc::c_void,
-        _: libc::c_ulong,
+        dest: *mut libc::c_void,
+        src: *const libc::c_void,
+        n: libc::size_t
     ) -> *mut libc::c_void;
     fn memset(
-        _: *mut libc::c_void,
-        _: libc::c_int,
-        _: libc::c_ulong,
+        s: *mut libc::c_void,
+        c: libc::c_int,
+        n: libc::size_t
     ) -> *mut libc::c_void;
     fn brk(__addr: *mut libc::c_void) -> libc::c_int;
     fn sbrk(__delta: intptr_t) -> *mut libc::c_void;
@@ -192,7 +192,7 @@ pub unsafe extern "C" fn mycalloc(
         return 0 as *mut libc::c_void;
     }
     let mut newMemory: *mut libc::c_void = mymalloc(nmemb.wrapping_mul(size));
-    memset(newMemory, 0 as libc::c_int, nmemb.wrapping_mul(size));
+    memset(newMemory, 0 as libc::c_int, nmemb.wrapping_mul(size) as libc::size_t);
     return newMemory;
 }
 #[no_mangle]
@@ -273,7 +273,7 @@ pub unsafe extern "C" fn myrealloc(
             ptr,
             (*currMem)
                 .length_to_next()
-                .wrapping_sub(::core::mem::size_of::<memDesc_t>()) as libc::c_ulong,
+                .wrapping_sub(::core::mem::size_of::<memDesc_t>()) as libc::size_t,
         );
         myfree(ptr);
         return newLocation;
