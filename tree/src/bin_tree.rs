@@ -63,23 +63,13 @@ where T: Copy + Eq + PartialOrd {
                 right : None
         }));
         if current.is_none() {
-            self.root = new_node
+            self.root = new_node;
         }
         else if current.as_ref().unwrap().value < value {
-            let left = current.as_mut().unwrap().left.take();
-            current.replace(Box::new(Node {
-                value : current.as_ref().unwrap().value,
-                left : left,
-                right : new_node
-            }));
+            current.as_mut().unwrap().right = new_node;
         }
         else {
-            let right = current.as_mut().unwrap().right.take();
-            current.replace(Box::new(Node {
-                value : current.as_ref().unwrap().value,
-                left : new_node,
-                right : right
-            }));
+            current.as_mut().unwrap().left = new_node;
         }
     }
 
