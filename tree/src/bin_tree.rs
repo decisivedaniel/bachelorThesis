@@ -35,9 +35,7 @@ where T: Copy + Eq + PartialOrd {
         let mut current = &self.root;
         while current.is_some() {
             last = current;
-            if current.as_ref().unwrap().right.is_some() {
-                current = &current.as_ref().unwrap().right;
-            }
+            current = &current.as_ref().unwrap().right;
         }
         match last {
             Some(x) => Some(x.value),
