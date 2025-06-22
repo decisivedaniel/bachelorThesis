@@ -49,46 +49,46 @@ where T: Copy + Eq + PartialOrd {
     }
 
     pub fn insert(&mut self, value : T) {
-        let mut current = &mut self.root;
-        while current.is_some() {
-            if current.as_ref().unwrap().value == value {return;}
-            else if current.as_ref().unwrap().value > value && current.as_ref().unwrap().left.is_some() {
-                current = &mut current.as_mut().unwrap().left;
-            }
-            else if current.as_ref().unwrap().value < value && current.as_ref().unwrap().right.is_some() {
-                current = &mut current.as_mut().unwrap().right;
-            }
-            else {
-                break;
-            }
-        }
-        let new_node = Some(Rc::new(Node {
-                parent : None,
-                value : value,
-                left : None,
-                right : None
-        }));
-        if current.is_none() {
-            self.root = new_node
-        }
-        else if current.as_ref().unwrap().value < value {
-            let left = current.as_mut().unwrap().left.take();
-            current.replace(Rc::new(Node {
-                parent : Some(Rc::downgrade(current.as_ref().unwrap())),
-                value : current.as_ref().unwrap().value,
-                left : left,
-                right : new_node
-            }));
-        }
-        else {
-            let right = current.as_ref().unwrap().right  .take();
-            current.replace(Rc::new(Node {
-                parent : Some(Rc::downgrade(current.as_ref().unwrap())),
-                value : current.as_ref().unwrap().value,
-                left : new_node,
-                right : right
-            }));
-        }
+        // let mut current = &mut self.root;
+        // while current.is_some() {
+        //     if current.as_ref().unwrap().value == value {return;}
+        //     else if current.as_ref().unwrap().value > value && current.as_ref().unwrap().left.is_some() {
+        //         current = &mut current.as_mut().unwrap().left;
+        //     }
+        //     else if current.as_ref().unwrap().value < value && current.as_ref().unwrap().right.is_some() {
+        //         current = &mut current.as_mut().unwrap().right;
+        //     }
+        //     else {
+        //         break;
+        //     }
+        // }
+        // let new_node = Some(Rc::new(Node {
+        //         parent : None,
+        //         value : value,
+        //         left : None,
+        //         right : None
+        // }));
+        // if current.is_none() {
+        //     self.root = new_node
+        // }
+        // else if current.as_ref().unwrap().value < value {
+        //     let left = current.as_mut().unwrap().left.take();
+        //     current.replace(Rc::new(Node {
+        //         parent : Some(Rc::downgrade(current.as_ref().unwrap())),
+        //         value : current.as_ref().unwrap().value,
+        //         left : left,
+        //         right : new_node
+        //     }));
+        // }
+        // else {
+        //     let right = current.as_ref().unwrap().right  .take();
+        //     current.replace(Rc::new(Node {
+        //         parent : Some(Rc::downgrade(current.as_ref().unwrap())),
+        //         value : current.as_ref().unwrap().value,
+        //         left : new_node,
+        //         right : right
+        //     }));
+        // }
     }
 
     pub fn contains(&self, elem : T) -> bool {
@@ -135,8 +135,8 @@ mod tests {
         tree.insert(2);
         tree.insert(9);
 
-        assert_eq!(tree.max(), Some(9));
         assert_eq!(tree.min(), Some(2));
+        assert_eq!(tree.max(), Some(9));
     }
 
     #[test]

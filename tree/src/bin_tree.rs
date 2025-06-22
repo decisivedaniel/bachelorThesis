@@ -117,8 +117,8 @@ mod tests {
         tree.insert(2);
         tree.insert(9);
 
-        assert_eq!(tree.max(), Some(9));
         assert_eq!(tree.min(), Some(2));
+        assert_eq!(tree.max(), Some(9));
     }
 
     #[test]
