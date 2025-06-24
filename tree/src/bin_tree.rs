@@ -17,34 +17,26 @@ where T: Copy + Eq + PartialOrd {
         BinTree { root : None}
     }
 
-    pub fn min(&self) -> Option<T> {
-        let mut last: &Option<Box<Node<T>>> = &None;
-        let mut current = &self.root;
-        while current.is_some() {
-            last = current;
+    pub fn min(&self) -> Option<&Box<Node<T>>> {
+        let mut current: &Option<Box<Node<T>>> = &self.root;
+        if current.is_none() {return current.as_ref();}
+        while current.as_ref().unwrap().left.is_some() {
             current = &current.as_ref().unwrap().left;
         }
-        match last {
-            Some(x) => Some(x.value),
-            None => None
-        }
+        return current.as_ref();
     }
 
-    pub fn max(&self) -> Option<T> {
-        let mut last: &Option<Box<Node<T>>> = &None;
+    pub fn max(&self) -> Option<&Box<Node<T>>> {
         let mut current = &self.root;
-        while current.is_some() {
-            last = current;
+        if current.is_none() {return current.as_ref();}
+        while current.as_ref().unwrap().right.is_some() {
             current = &current.as_ref().unwrap().right;
         }
-        match last {
-            Some(x) => Some(x.value),
-            None => None
-        }
+        return current.as_ref();
     }
 
     pub fn insert(&mut self, value : T) {
-        let mut current = &mut self.root;
+        let mut current: &mut Option<Box<Node<T>>> = &mut self.root;
         while current.is_some() {
             if current.as_ref().unwrap().value == value {return;}
             else if current.as_ref().unwrap().value > value && current.as_ref().unwrap().left.is_some() {
@@ -104,21 +96,21 @@ mod tests {
 
     #[test]
     fn min_max () {
-        let mut tree = BinTree::<u64>::new();
-        
-        assert_eq!(tree.min(), None);
-        assert_eq!(tree.max(), None);
+        let mut tree: BinTree<u64> = BinTree::<u64>::new();
+
+        assert!(tree.min().is_none());
+        assert!(tree.max().is_none());
         
         tree.insert(5);
 
-        assert_eq!(tree.min(), Some(5));
-        assert_eq!(tree.max(), Some(5));
+        assert_eq!(tree.min().unwrap().value, 5);
+        assert_eq!(tree.max().unwrap().value, 5);
 
         tree.insert(2);
         tree.insert(9);
 
-        assert_eq!(tree.min(), Some(2));
-        assert_eq!(tree.max(), Some(9));
+        assert_eq!(tree.min().unwrap().value, 2);
+        assert_eq!(tree.max().unwrap().value, 9);
     }
 
     #[test]
