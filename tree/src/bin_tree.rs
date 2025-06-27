@@ -68,15 +68,18 @@ where T: Copy + Eq + PartialOrd {
                 left : None,
                 right : None
         }));
-        if current.is_none() {
-            self.root = new_node;
+        match current {
+            None => self.root = new_node,
+            Some(parent) => {
+                if parent.value < value {
+                    parent.right = new_node;
+                }
+                else {
+                    parent.left = new_node;
+                }
+            }
         }
-        else if current.as_ref().unwrap().value < value {
-            current.as_mut().unwrap().right = new_node;
-        }
-        else {
-            current.as_mut().unwrap().left = new_node;
-        }
+        
     }
 
     pub fn contains(&self, elem : T) -> bool {
