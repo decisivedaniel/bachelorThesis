@@ -125,6 +125,15 @@ mod tests {
 
         assert_eq!(tree.min().unwrap().value, 2);
         assert_eq!(tree.max().unwrap().value, 9);
+
+        tree.insert(1);
+        tree.insert(3);
+        tree.insert(7);
+        tree.insert(10);
+
+        assert_eq!(tree.min().unwrap().value, 1);
+        assert_eq!(tree.max().unwrap().value, 10);
+
     }
 
     #[test]
