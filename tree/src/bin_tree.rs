@@ -87,6 +87,20 @@ where T: Copy + Eq + PartialOrd {
 }   
 
 
+impl<T> Drop for BinTree<T>
+where T:Copy + Eq + PartialOrd {
+    fn drop(&mut self) {
+        self.root.take();
+    }
+}
+
+impl<T> Drop for Node<T> 
+where T:Copy + Eq + PartialOrd {
+    fn drop(&mut self) {
+        self.left.take();
+        self.right.take();
+    }
+}
 
 
 #[cfg(test)]
