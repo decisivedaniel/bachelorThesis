@@ -11,28 +11,42 @@ where T: Copy + Eq + PartialOrd {
     root : Option<Box<Node<T>>>
 }
 
+impl<T> Node<T>
+where T: Copy + Eq + PartialOrd {
+    fn min_node(&self) -> &Node<T> {
+        match self.left.as_ref() {
+            None => self,
+            Some(left) => left.min_node()
+        }
+    }
+
+    fn max_node(&self) -> &Node<T> {
+        match self.right.as_ref() {
+            None => self,
+            Some(right) => right.max_node()
+        }
+    }
+}
+
+
 impl<T> BinTree<T> 
 where T: Copy + Eq + PartialOrd {
     pub fn new() -> Self {
         BinTree { root : None}
     }
 
-    pub fn min(&self) -> Option<&Box<Node<T>>> {
-        let mut current: &Option<Box<Node<T>>> = &self.root;
-        if current.is_none() {return current.as_ref();}
-        while current.as_ref().unwrap().left.is_some() {
-            current = &current.as_ref().unwrap().left;
+    pub fn min(&self) -> Option<&Node<T>> {
+        match self.root.as_ref() {
+            None => None,
+            Some(root_node) => Some(root_node.min_node())
         }
-        return current.as_ref();
     }
 
-    pub fn max(&self) -> Option<&Box<Node<T>>> {
-        let mut current = &self.root;
-        if current.is_none() {return current.as_ref();}
-        while current.as_ref().unwrap().right.is_some() {
-            current = &current.as_ref().unwrap().right;
+    pub fn max(&self) -> Option<&Node<T>> {
+        match self.root.as_ref() {
+            None => None,
+            Some(root_node) => Some(root_node.max_node())
         }
-        return current.as_ref();
     }
 
     pub fn insert(&mut self, value : T) {
