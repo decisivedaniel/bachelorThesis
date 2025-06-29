@@ -1,4 +1,4 @@
-// use std::{cell::RefCell, rc::{Rc, Weak}};
+// use std::{cell::{Ref, RefCell}, rc::{Rc, Weak}};
 
 
 // pub struct Node<T>
@@ -40,26 +40,33 @@
 //             last = current;
 //             current = &node.borrow().right;
 //         }
-//         match last {
-//             Some(x) => Some(&x.borrow().value),
-//             None => None
+//         return last.as_ref();
+//     }
+
+//     fn findInsert(&self, node : &Rc<RefCell<Node<'a, T>>>, search : &T) -> Option<&Rc<RefCell<Node<'a, T>>>> {
+//         if node.borrow().value == *search { return None; }
+//         if node.borrow().value > *search {
+//             match &node.borrow().left {
+//                 None => return Some(node),
+//                 Some(left) => {
+//                     return self.findInsert(left, search)
+//                 }
+//             }
+//         } else {
+//             match &node.borrow().right {
+//                 None => return Some(node),
+//                 Some(right) => {
+//                     return self.findInsert(right, search)
+//                 }
+//             }
 //         }
 //     }
 
 //     pub fn insert(&mut self, value : T) {
-//         let mut current = &self.root;
-//         while let Some(node) = current {
-//             if node.borrow().value == value {return;}
-//             else if node.borrow().value > value && node.borrow().left.is_some() {
-//                 current = &node.borrow().left;
-//             }
-//             else if node.borrow().value < value && node.borrow().right.is_some() {
-//                 current = &node.borrow().right;
-//             }
-//             else {
-//                 break;
-//             }
-//         }
+//         let current = match &self.root {
+//             None => None,
+//             Some(root) => self.findInsert(root, &value) 
+//         };
 //         let new_node = Rc::new(RefCell::new(Node {
 //                 parent : None,
 //                 value : value,
