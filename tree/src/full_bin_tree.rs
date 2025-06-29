@@ -2,7 +2,7 @@
 
 
 // pub struct Node<T>
-// where T: Copy + Eq + PartialOrd {
+// where T: Clone + Eq + PartialOrd {
 //     parent : Option<Weak<RefCell<Node<T>>>>,
 //     left : Option<Rc<RefCell<Node<T>>>>,
 //     right : Option<Rc<RefCell<Node<T>>>>,
@@ -10,17 +10,17 @@
 // }
 
 // pub struct FullBinTree<T>
-// where T: Copy + Eq + PartialOrd {
+// where T: Clone + Eq + PartialOrd {
 //     root : Option<Rc<RefCell<Node<T>>>>
 // }
 
 // impl<T> FullBinTree<T> 
-// where T: Copy + Eq + PartialOrd {
+// where T: Clone + Eq + PartialOrd {
 //     pub fn new() -> Self {
 //         FullBinTree { root : None}
 //     }
 
-//     pub fn min(&self) -> Option<T> {
+//     pub fn min(&self) -> Option<&T> {
 //         let mut last: &Option<Rc<RefCell<Node<T>>>> = &None;
 //         let mut current = &self.root;
 //         while current.is_some() {
@@ -28,78 +28,69 @@
 //             current = &current.as_ref().unwrap().borrow().left;
 //         }
 //         match last {
-//             Some(x) => Some(x.borrow().value),
+//             Some(x) => Some(&x.borrow().value),
 //             None => None
 //         }
 //     }
 
-//     pub fn max(&self) -> Option<T> {
+//     pub fn max(&self) -> Option<&T> {
 //         let mut last: &Option<Rc<RefCell<Node<T>>>> = &None;
 //         let mut current = &self.root;
-//         while current.is_some() {
+//         while let Some(node) = current {
 //             last = current;
-//             current = &current.as_ref().unwrap().as_ref().right;
+//             current = &node.borrow().right;
 //         }
 //         match last {
-//             Some(x) => Some(x.borrow().value),
+//             Some(x) => Some(&x.borrow().value),
 //             None => None
 //         }
 //     }
 
 //     pub fn insert(&mut self, value : T) {
-//         let mut current = &mut self.root;
-//         while current.is_some() {
-//             if current.as_ref().unwrap().value == value {return;}
-//             else if current.as_ref().unwrap().value > value && current.as_ref().unwrap().left.is_some() {
-//                 current = &mut current.as_mut().unwrap().left;
+//         let mut current = &self.root;
+//         while let Some(node) = current {
+//             if node.borrow().value == value {return;}
+//             else if node.borrow().value > value && node.borrow().left.is_some() {
+//                 current = &node.borrow().left;
 //             }
-//             else if current.as_ref().unwrap().value < value && current.as_ref().unwrap().right.is_some() {
-//                 current = &mut current.as_mut().unwrap().right;
+//             else if node.borrow().value < value && node.borrow().right.is_some() {
+//                 current = &node.borrow().right;
 //             }
 //             else {
 //                 break;
 //             }
 //         }
-//         let new_node = Some(Rc::new(Node {
+//         let new_node = Rc::new(RefCell::new(Node {
 //                 parent : None,
 //                 value : value,
 //                 left : None,
 //                 right : None
 //         }));
-//         if current.is_none() {
-//             self.root = new_node
-//         }
-//         else if current.as_ref().unwrap().value < value {
-//             let left = current.as_mut().unwrap().left.take();
-//             current.replace(Rc::new(Node {
-//                 parent : Some(Rc::downgrade(current.as_ref().unwrap())),
-//                 value : current.as_ref().unwrap().value,
-//                 left : left,
-//                 right : new_node
-//             }));
-//         }
-//         else {
-//             let right = current.as_ref().unwrap().right  .take();
-//             current.replace(Rc::new(Node {
-//                 parent : Some(Rc::downgrade(current.as_ref().unwrap())),
-//                 value : current.as_ref().unwrap().value,
-//                 left : new_node,
-//                 right : right
-//             }));
+//         match current {
+//             None => self.root = Some(new_node),
+//             Some(parent_node) => {
+//                 if parent_node.borrow().value < new_node.borrow().value {
+//                     new_node.borrow_mut().parent = Some(Rc::downgrade(&parent_node));
+//                     parent_node.borrow_mut().right = Some(new_node);
+//                 } else {
+//                     new_node.borrow_mut().parent = Some(Rc::downgrade(&parent_node));
+//                     parent_node.borrow_mut().left = Some(new_node);
+//                 }
+//             }
 //         }
 //     }
 
 //     pub fn contains(&self, elem : T) -> bool {
 //         let mut current = &self.root;
-//         while current.is_some() {
-//             if current.as_ref().unwrap().value == elem {
+//         while let Some(node) = current {
+//             if node.borrow().value == elem {
 //                 return true;
 //             }
-//             if current.as_ref().unwrap().value < elem {
-//                 current = &current.as_ref().unwrap().right;
+//             if node.borrow().value < elem {
+//                 current = &node.borrow().right;
 //             }
 //             else {
-//                 current = &current.as_ref().unwrap().left;
+//                 current = &node.borrow().left;
 //             }
 //         }
 //         false
