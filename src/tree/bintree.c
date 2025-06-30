@@ -112,16 +112,16 @@ void insert(struct Tree* tree, void* add) {
     }
 }
 
-void transplant(struct Tree* tree, t_node* u, t_node* v) {
-    if (u->parent == NULL) {
-        tree->root = v;
-    } else if (u == u->parent->left) {
-        u->parent->left = v;
+void transplant(struct Tree* tree, t_node* remove, t_node* replacement) {
+    if (remove->parent == NULL) {
+        tree->root = replacement;
+    } else if (remove == remove->parent->left) {
+        remove->parent->left = replacement;
     } else {
-        u->parent->right = v;
+        remove->parent->right = replacement;
     }
-    if (v != NULL) {
-        v->parent = u->parent;
+    if (replacement != NULL) {
+        replacement->parent = remove->parent;
     } 
 }
 
@@ -134,7 +134,7 @@ void delete(struct Tree* tree, void* value) {
         transplant(tree, toDelete, toDelete->left);
     } else {
         t_node* nextMin = min(toDelete->right);
-        if (treeEqual(nextMin->parent, toDelete) == 0) {
+        if (treeEqual(nextMin->parent, toDelete) != 0) {
             transplant(tree, nextMin, nextMin->right);
             nextMin->right = toDelete->right;
             nextMin->right->parent = nextMin;
