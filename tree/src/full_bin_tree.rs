@@ -1,4 +1,4 @@
-use std::{cell::{Ref, RefCell}, rc::{Rc, Weak}};
+use std::{cell::{RefCell}, rc::{Rc, Weak}};
 
 
 pub struct Node<T>
@@ -11,6 +11,21 @@ where T: Clone + Eq + PartialOrd {
 
 impl<T> Node<T> 
 where T: Clone + Eq + PartialOrd {
+
+    // fn min(&self) -> Option<Ref<'_,T>> {
+    //     match &self.left {
+    //         None => None,
+    //         Some(left) => {
+    //             let value = left.borrow().min();
+    //             if value.is_none() {
+    //                 return Some(Ref::map(left.borrow(), |node| &node.value));
+    //             }
+    //             return value;
+    //         }
+    //     }
+    // }
+
+
 
     fn contains(&self, search : &T) -> bool {
         if self.value == *search {return true;}
@@ -73,17 +88,18 @@ where T: Clone + Eq + PartialOrd {
         FullBinTree { root : None}
     }
 
-    // pub fn min(&self) -> Option<&T> {
-    //     let mut last: &Option<Rc<RefCell<Node<T>>>> = &None;
-    //     let mut current = &self.root;
-    //     while current.is_some() {
-    //         last = current;
-    //         current = &current.as_ref().unwrap().borrow().left;
+    // pub fn min(&self) -> Option<Ref<T>> {
+    //     let mut current = self.root.as_ref().map(|node| node.borrow());
+    //     while let Some(node) = current {
+    //         match &node.left {
+    //             None => break,
+    //             Some(left) => current = Some(left.borrow())
+    //         }
     //     }
-    //     match last {
-    //         Some(x) => Some(&x.borrow().value),
-    //         None => None
-    //     }
+    //     return match current {
+    //         None => None,
+    //         Some(ref_node) => Some(Ref::map(ref_node, |node : &Node<T>| &node.value))
+    //     };
     // }
 
     // pub fn max(&self) -> Option<&T> {
