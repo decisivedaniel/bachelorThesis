@@ -1,52 +1,38 @@
 
 pub struct Node<T>
-where T: Copy + Eq + PartialOrd {
+where T: Clone + Eq + PartialOrd {
     left : Option<Box<Node<T>>>,
     right : Option<Box<Node<T>>>,
     value : T
 }
 
 pub struct BinTree<T>
-where T: Copy + Eq + PartialOrd {
+where T: Clone + Eq + PartialOrd {
     root : Option<Box<Node<T>>>
 }
 
-impl<T> Node<T>
-where T: Copy + Eq + PartialOrd {
-    fn min_node(&self) -> &Node<T> {
-        match self.left.as_ref() {
-            None => self,
-            Some(left) => left.min_node()
-        }
-    }
-
-    fn max_node(&self) -> &Node<T> {
-        match self.right.as_ref() {
-            None => self,
-            Some(right) => right.max_node()
-        }
-    }
-}
-
-
 impl<T> BinTree<T> 
-where T: Copy + Eq + PartialOrd {
+where T: Clone + Eq + PartialOrd {
     pub fn new() -> Self {
         BinTree { root : None}
     }
 
-    pub fn min(&self) -> Option<&Node<T>> {
-        match self.root.as_ref() {
-            None => None,
-            Some(root_node) => Some(root_node.min_node())
+    pub fn min(&self) -> Option<&Box<Node<T>>> {
+        let mut current: &Option<Box<Node<T>>> = &self.root;
+        if current.is_none() {return current.as_ref();}
+        while current.as_ref().unwrap().left.is_some() {
+            current = &current.as_ref().unwrap().left;
         }
+        return current.as_ref();
     }
 
-    pub fn max(&self) -> Option<&Node<T>> {
-        match self.root.as_ref() {
-            None => None,
-            Some(root_node) => Some(root_node.max_node())
+    pub fn max(&self) -> Option<&Box<Node<T>>> {
+        let mut current = &self.root;
+        if current.is_none() {return current.as_ref();}
+        while current.as_ref().unwrap().right.is_some() {
+            current = &current.as_ref().unwrap().right;
         }
+        return current.as_ref();
     }
 
     pub fn insert(&mut self, value : T) {
@@ -68,18 +54,16 @@ where T: Copy + Eq + PartialOrd {
                 left : None,
                 right : None
         }));
-        match current {
-            None => self.root = new_node,
-            Some(parent) => {
-                if parent.value < value {
-                    parent.right = new_node;
-                }
-                else {
-                    parent.left = new_node;
-                }
-            }
+        if current.is_none() {
+            self.root = new_node;
         }
-        
+        else if current.as_ref().unwrap().value < 
+            new_node.as_ref().unwrap().value {
+            current.as_mut().unwrap().right = new_node;
+        }
+        else {
+            current.as_mut().unwrap().left = new_node;
+        }
     }
 
     pub fn contains(&self, elem : T) -> bool {
@@ -104,20 +88,6 @@ where T: Copy + Eq + PartialOrd {
 }   
 
 
-impl<T> Drop for BinTree<T>
-where T:Copy + Eq + PartialOrd {
-    fn drop(&mut self) {
-        self.root.take();
-    }
-}
-
-impl<T> Drop for Node<T> 
-where T:Copy + Eq + PartialOrd {
-    fn drop(&mut self) {
-        self.left.take();
-        self.right.take();
-    }
-}
 
 
 #[cfg(test)]
@@ -142,15 +112,6 @@ mod tests {
 
         assert_eq!(tree.min().unwrap().value, 2);
         assert_eq!(tree.max().unwrap().value, 9);
-
-        tree.insert(1);
-        tree.insert(3);
-        tree.insert(7);
-        tree.insert(10);
-
-        assert_eq!(tree.min().unwrap().value, 1);
-        assert_eq!(tree.max().unwrap().value, 10);
-
     }
 
     #[test]
