@@ -169,20 +169,81 @@ double what_time_is_it()
     struct timespec now;
     timespec_get(&now, TIME_UTC);
     //clock_gettime(CLOCK_REALTIME, &now);
-    return ((int64_t) now.tv_sec) * 1000 + ((int64_t) now.tv_nsec) / 1000000;
+    return ((int64_t) now.tv_sec) + ((int64_t) now.tv_nsec) / 1000000000.0;
+}
+
+struct Tree* create_test(int* list, int max) {
+    struct Tree* tree = treeNew();
+    for(int i = 0; i < max; i++) {
+        insert(tree, list[i]);
+    }
+    return tree;
+}
+
+void readTree(struct Tree* tree, int max) {
+    for(int i = 0; i < max; i++) {
+        contains(tree->root, i);
+    }
+}
+
+void optimizedList(int* list, int* currentPosition, int lower, int upper) {
+    if(lower == upper) {return;}
+    int mid = ((upper - lower) / 2) + lower;
+    list[*currentPosition] = mid;
+    *currentPosition = *currentPosition + 1;
+    optimizedList(list,currentPosition,lower,mid);
+    optimizedList(list,currentPosition,mid+1,upper);
+}
+
+int* createOptimizedList(int max) {
+    int* list = malloc(sizeof(int) * max);
+    int currentPos = 0;
+    optimizedList(list, &currentPos, 0, max);
+    return list;
+}
+
+int* createUnoptimizedList(int max) {
+    int* list = malloc(sizeof(int) * max);
+    for(int i = 0; i<max; i++) {
+        list[i] = i;
+    }
+    return list;
 }
 
 int main() {
-    int64_t start = what_time_is_it();
-    struct Tree* tree = treeNew();
-    for(int i = 0; i < 10000; i++) {
-        insert(tree, i);
-    }
-    for(int i = 0; i < 10000; i++) {
-        contains(tree->root, i);
-    }
-    printf("time took %f", what_time_is_it() - start);
+    int counts[5] = {1024,2048,4096,8192,16384};
+    int numberOfRuns = 10;
+    for (int count = 0; count < 5; count++) {
+        printf("%d - ", counts[count]);
+        double* results = calloc(sizeof(double), numberOfRuns*4);
+        for (int run = 0; run < numberOfRuns; run++) {
+            int* optimized = createOptimizedList(counts[count]);
+            double start = what_time_is_it();
+            struct Tree* tree = create_test(optimized, counts[count]);
+            results[run] = what_time_is_it() - start;
+            double read = what_time_is_it();
+            readTree(tree,counts[count]);
+            results[run+numberOfRuns] = what_time_is_it() - read;
+            freeTree(tree);
+            free(optimized);
 
-    freeTree(tree);
-    
+            int* worst = createUnoptimizedList(counts[count]);
+            start = what_time_is_it();
+            struct Tree* worstTree = create_test(worst, counts[count]);
+            results[run+(numberOfRuns*2)] = what_time_is_it() - start;
+            read = what_time_is_it();
+            readTree(worstTree,counts[count]);
+            results[run+(numberOfRuns*3)] = what_time_is_it() - read;
+            freeTree(worstTree);
+            free(worst);
+        }  
+        for(int result = 0; result < numberOfRuns*4; result++) {
+            printf("%f\\\\", results[result]);
+            if((result+1)%numberOfRuns == 0) {
+                printf("\n");
+            }
+        }
+        free(results);
+        printf("\n\n");
+    }  
 }
