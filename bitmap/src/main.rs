@@ -1,6 +1,7 @@
 use std::fs;
 use std::io;
 use std::str;
+use std::{time::{Instant}};
 
 fn main() {
     let mut white_noise = String::new();
@@ -8,7 +9,7 @@ fn main() {
     let message = String::from("Reading Dilbert strips or encoding Elbonian messages are not good excuses for failing the XBC009 final exam.");
 
     let response = user_selection();
-
+    let begin = Instant::now();
     create_wn_pattern(&mut white_noise, row_white_noise);
 
     if response == 0 {
@@ -16,6 +17,7 @@ fn main() {
     } else {
         decrypt(white_noise.as_str());
     }
+    println!("{}\\", begin.elapsed().as_secs_f64());
 }
 
 fn encrypt(white_noise: &str, message: &str) {
@@ -37,7 +39,7 @@ fn user_selection() -> u64 {
     let mut buf = String::new();
     match io::stdin().read_line(&mut buf) {
         Ok(_) => {
-            return buf.parse::<u64>().unwrap_or(0);
+            return buf.parse::<u64>().unwrap_or(2);
         }
         Err(error) => println!("Error: {error}")
     };
