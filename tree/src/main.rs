@@ -65,7 +65,7 @@ fn optimal_test_create_tree(values : Vec<u64>) -> BinTree<u64> {
 
 fn optimal_test_read_tree(tree : BinTree<u64>, upper: u64) {
     for i in 0..upper {
-        tree.contains(i);
+        tree.contains(&i);
     }
 }
 
@@ -79,7 +79,7 @@ fn worst_case_create_tree(values : Vec<u64>) -> BinTree<u64> {
 
 fn worst_case_read_tree(tree : BinTree<u64>, upper : u64) {
     for i in 0..upper {
-        tree.contains(i);
+        tree.contains(&i);
     }
 }
 
