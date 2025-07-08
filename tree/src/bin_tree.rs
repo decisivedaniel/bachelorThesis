@@ -39,17 +39,18 @@ where T: Copy + Eq + PartialOrd {
     }
 
     fn insert_here(&mut self, elem : T) {
+        let set_node = 
+            if self.value < elem {
+                &mut self.right
+            } else {
+                &mut self.left
+            };
         let new_node = Some(Box::new(Node {
                 value : elem,
                 left : None,
                 right : None
         }));
-        if self.value < elem {
-            self.right = new_node;
-        }
-        else {
-            self.left = new_node;
-        }
+        *set_node = new_node;
     }
 
     fn insert_find(&mut self, elem : T) {
