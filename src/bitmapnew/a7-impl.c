@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <inttypes.h>
 
 char *getMessage(char *message);
 char *retrieveMessage(const char *message);
@@ -10,6 +12,14 @@ char *encryptMessage(char* message, int messageLength, char* whiteNoise);
 void createBMP(char* encryptedWhiteNoise, char *whiteNoise);
 void readBMP(char* encryptedWhiteNoise, char *whiteNoise);
 char* runLengthDecode(char *encodedMessage);
+
+double what_time_is_it()
+{
+    struct timespec now;
+    timespec_get(&now, TIME_UTC);
+    //clock_gettime(CLOCK_REALTIME, &now);
+    return ((int64_t) now.tv_sec) + ((int64_t) now.tv_nsec) / 1000000000.0;
+}
 
 int main()
 {
@@ -21,6 +31,8 @@ int main()
     int input = 0;
     scanf("%d", &input);
 
+    double start = what_time_is_it();
+    
     // Repeating White Noise Pattern
     createWNPattern(whiteNoise, rowWhiteNoise);
 
@@ -57,13 +69,13 @@ int main()
         encryptedWhiteNoise = runLengthDecode(encryptedWhiteNoise);
 
         encryptedWhiteNoise = retrieveMessage(encryptedWhiteNoise);
-        printf("%s\n", encryptedWhiteNoise);
+        //printf("%s\n", encryptedWhiteNoise);
 
         //free(unencryptedMessage);
         free(encryptedWhiteNoise);
     }
-
     free(whiteNoise);
+    printf("%f\\\\\n ", what_time_is_it() - start);
     
 }
 

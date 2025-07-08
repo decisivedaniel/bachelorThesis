@@ -26,6 +26,40 @@ where T: Copy + Eq + PartialOrd {
             Some(right) => right.max_node()
         }
     }
+
+    fn contains(&self, elem : &T) -> bool {
+        if self.value == *elem {
+            return true;
+        }
+        let node = if self.value < *elem {&self.right} else {&self.left};
+        match node {
+            None => false,
+            Some (child) => child.contains(elem)
+        }
+    }
+
+    fn insert_here(&mut self, elem : T) {
+        let set_node = 
+            if self.value < elem {
+                &mut self.right
+            } else {
+                &mut self.left
+            };
+        let new_node = Some(Box::new(Node {
+                value : elem,
+                left : None,
+                right : None
+        }));
+        *set_node = new_node;
+    }
+
+    fn insert_find(&mut self, elem : T) {
+        let node = if self.value < elem {&mut self.right} else {&mut self.left};
+        match node {
+            None => self.insert_here(elem),
+            Some(child) => child.insert_find(elem)
+        }
+    }
 }
 
 
@@ -49,53 +83,25 @@ where T: Copy + Eq + PartialOrd {
         }
     }
 
-    pub fn insert(&mut self, value : T) {
-        let mut current: &mut Option<Box<Node<T>>> = &mut self.root;
-        while current.is_some() {
-            if current.as_ref().unwrap().value == value {return;}
-            else if current.as_ref().unwrap().value > value && current.as_ref().unwrap().left.is_some() {
-                current = &mut current.as_mut().unwrap().left;
-            }
-            else if current.as_ref().unwrap().value < value && current.as_ref().unwrap().right.is_some() {
-                current = &mut current.as_mut().unwrap().right;
-            }
-            else {
-                break;
-            }
-        }
-        let new_node = Some(Box::new(Node {
-                value : value,
-                left : None,
-                right : None
-        }));
-        match current {
-            None => self.root = new_node,
-            Some(parent) => {
-                if parent.value < value {
-                    parent.right = new_node;
-                }
-                else {
-                    parent.left = new_node;
-                }
-            }
-        }
-        
+    pub fn insert(&mut self, elem : T) {
+        match &mut self.root {
+            None => {
+                let new_node = Some(Box::new(Node {
+                    value : elem,
+                    left : None,
+                    right : None
+                }));
+                self.root = new_node;
+            },
+            Some(root) => root.insert_find(elem),
+        }        
     }
 
-    pub fn contains(&self, elem : T) -> bool {
-        let mut current = &self.root;
-        while current.is_some() {
-            if current.as_ref().unwrap().value == elem {
-                return true;
-            }
-            if current.as_ref().unwrap().value < elem {
-                current = &current.as_ref().unwrap().right;
-            }
-            else {
-                current = &current.as_ref().unwrap().left;
-            }
+    pub fn contains(&self, elem : &T) -> bool {
+        match &self.root {
+            None => false,
+            Some(node) => node.contains(elem)
         }
-        false
     }
 
     pub fn delete(&mut self, value : T) {
@@ -162,10 +168,10 @@ mod tests {
         tree.insert(9);
 
 
-        assert!(tree.contains(9), "tree should contain 9");
-        assert!(tree.contains(2), "tree should contain 2");
-        assert!(tree.contains(5), "tree should contain 5");
-        assert!(!tree.contains(4), "tree should not contain 4");
+        assert!(tree.contains(&9), "tree should contain 9");
+        assert!(tree.contains(&2), "tree should contain 2");
+        assert!(tree.contains(&5), "tree should contain 5");
+        assert!(!tree.contains(&4), "tree should not contain 4");
     }
 
     #[test]
@@ -177,11 +183,11 @@ mod tests {
         tree.insert(2);
         tree.insert(9);
 
-        assert!(tree.contains(5), "tree should contain 5");
+        assert!(tree.contains(&5), "tree should contain 5");
 
         tree.delete(5);
 
-        assert!(!tree.contains(5));
-        assert!(tree.contains(9));
+        assert!(!tree.contains(&5));
+        assert!(tree.contains(&9));
     }
 }

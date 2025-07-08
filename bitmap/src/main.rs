@@ -1,14 +1,17 @@
 use std::fs;
-use std::io;
 use std::str;
+use std::{time::{Instant}};
 
 fn main() {
     let mut white_noise = String::new();
     let row_white_noise = "WWWWWWWWBBBBBBBBWWWWBBBBWWBBBWWR";
     let message = String::from("Reading Dilbert strips or encoding Elbonian messages are not good excuses for failing the XBC009 final exam.");
 
-    let response = user_selection();
-
+    let response = 0;//user_selection();
+    if response == 0 {
+        _ = std::fs::remove_file("output.bmp");
+    }
+    let begin = Instant::now();
     create_wn_pattern(&mut white_noise, row_white_noise);
 
     if response == 0 {
@@ -16,6 +19,8 @@ fn main() {
     } else {
         decrypt(white_noise.as_str());
     }
+    print!("{} ", begin.elapsed().as_secs_f64());
+
 }
 
 fn encrypt(white_noise: &str, message: &str) {
@@ -29,20 +34,20 @@ fn decrypt(white_noise: &str) {
     read_image(&mut encrypted_white_noise, white_noise);
     let decoded_message = run_length_decode(&encrypted_white_noise);
     let trimmed_message = retrieve_message(&decoded_message);
-    println!("Message {trimmed_message}");
+    print!("Message {trimmed_message} ");
 }
 
-fn user_selection() -> u64 {
-    println!("enter 0 for encryption, enter 1 for decryption");
-    let mut buf = String::new();
-    match io::stdin().read_line(&mut buf) {
-        Ok(_) => {
-            return buf.parse::<u64>().unwrap_or(0);
-        }
-        Err(error) => println!("Error: {error}")
-    };
-    return 0;
-}
+// fn user_selection() -> u64 {
+//     println!("enter 0 for encryption, enter 1 for decryption");
+//     let mut buf = String::new();
+//     match io::stdin().read_line(&mut buf) {
+//         Ok(_) => {
+//             return buf.parse::<u64>().unwrap_or(0);
+//         }
+//         Err(error) => println!("Error: {error}")
+//     };
+//     return 0;
+// }
 
 fn get_message (message: &str) -> String {
     let lead = "XXXXXXXXBBBBCCCCOOOO000099999999";
@@ -52,13 +57,23 @@ fn get_message (message: &str) -> String {
 
 fn retrieve_message(message: &str) -> String {
     let lead = "XXXXXXXXBBBBCCCCOOOO000099999999";
-    return message.strip_prefix(lead).unwrap()
-        .strip_suffix(lead).unwrap().to_string();
+    return match message.strip_prefix(lead) {
+        None => message.to_string(),
+        Some(process) => {
+            match process.strip_suffix(lead) {
+                None => process.to_string(),
+                Some(second_process) => second_process.to_string()
+            }
+        }
+    }
 }
 
 fn run_length_encode(message: &str) -> String {
     let mut encoded = String::new();
-    let mut last_char = message.chars().nth(0).unwrap();
+    let mut last_char = match message.chars().nth(0) {
+        None => return encoded,
+        Some(first) => first
+    };
     let mut count : u8 = 0;
     for message_char in message.chars() {
         if last_char == message_char && count < 9 {
@@ -79,8 +94,17 @@ fn run_length_decode(encoded_message: &str) -> String {
     let mut decoded = String::new();
     let mut encoded_msg_iterator = encoded_message.chars().peekable();
     while encoded_msg_iterator.peek().is_some() {
-        let amount = encoded_msg_iterator.next().unwrap().to_digit(10).unwrap_or(0);
-        let letter = encoded_msg_iterator.next().unwrap();
+        let amount = match encoded_msg_iterator.next() {
+            None => break,
+            Some(number_char) => match number_char.to_digit(10){
+                None => break,
+                Some(number) => number
+            } 
+        };
+        let letter = match encoded_msg_iterator.next() {
+            None => break,
+            Some(letter) => letter
+        };
         if letter == 0x00 as char {
             break;
         }
@@ -164,7 +188,10 @@ fn create_image(message: &str, white_noise: &str){
             pixel_value[2] = 0x00;
         }
         if current.0 < message.len() {
-            let current_letter = message_chars.next().unwrap();
+            let current_letter = match message_chars.next() {
+                None => continue,
+                Some(letter) => letter
+            };
             let mut divide = current_letter as u8 / 16;
             let mut mod_value = current_letter as u8 % 16; 
             let mut flag = 0;
@@ -187,7 +214,10 @@ fn create_image(message: &str, white_noise: &str){
 }
 
 fn read_image(encrypted_white_noise: &mut String, white_noise: &str) {
-    let image = fs::read("output.bmp").unwrap();
+    let image = match fs::read("output.bmp") {
+        Ok(t) => t,
+        Err(_) => return
+    };
     let mut image_index = 54;
     for current in white_noise.chars() {
         let mut divide: u8 = 0;

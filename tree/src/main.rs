@@ -1,33 +1,36 @@
 use std::{time::{Duration, Instant}};
 
 use crate::bin_tree::BinTree;
-//use crate::full_bin_tree::FullBinTree;
+use crate::full_bin_tree::FullBinTree;
 
 mod bin_tree;
-//mod bin_tree_clone;
-//mod full_bin_tree;
+mod bin_tree_clone;
+mod full_bin_tree;
 
 fn main() {
     let number_of_trials = 10;
     let counts = vec![1024,2048,4096,8192,16384];
     for upper in counts {
-        print!("{} - ", upper);
+        print!("{}- ", upper);
         let optimal: (Vec<f64>, Vec<f64>) = test_loop(make_optimized_list, optimal_test_create_tree, optimal_test_read_tree, number_of_trials, upper);
         for value in optimal.0 {
-            print!("{}\\\\", value);
+            print!("{} ", value);
         }
         println!("");
+        print!("{}- ", upper);
         for value in optimal.1 {
-            print!("{}\\\\", value);
+            print!("{} ", value);
         }
         println!("");
+        print!("{}- ", upper);
         let worst = test_loop(make_worst_list, worst_case_create_tree, worst_case_read_tree, number_of_trials, upper);
         for value in worst.0 {
-            print!("{}\\\\", value);
+            print!("{} ", value);
         }
         println!("");
+        print!("{}- ", upper);
         for value in worst.1 {
-            print!("{}\\\\", value);
+            print!("{} ", value);
         }
         println!("");
     }
@@ -65,7 +68,7 @@ fn optimal_test_create_tree(values : Vec<u64>) -> BinTree<u64> {
 
 fn optimal_test_read_tree(tree : BinTree<u64>, upper: u64) {
     for i in 0..upper {
-        tree.contains(i);
+        tree.contains(&i);
     }
 }
 
@@ -79,7 +82,7 @@ fn worst_case_create_tree(values : Vec<u64>) -> BinTree<u64> {
 
 fn worst_case_read_tree(tree : BinTree<u64>, upper : u64) {
     for i in 0..upper {
-        tree.contains(i);
+        tree.contains(&i);
     }
 }
 

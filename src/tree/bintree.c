@@ -212,9 +212,9 @@ int* createUnoptimizedList(int max) {
 
 int main() {
     int counts[5] = {1024,2048,4096,8192,16384};
-    int numberOfRuns = 10;
+    int numberOfRuns = 40;
     for (int count = 0; count < 5; count++) {
-        printf("%d - ", counts[count]);
+        printf("%d- ", counts[count]);
         double* results = calloc(sizeof(double), numberOfRuns*4);
         for (int run = 0; run < numberOfRuns; run++) {
             int* optimized = createOptimizedList(counts[count]);
@@ -238,9 +238,9 @@ int main() {
             free(worst);
         }  
         for(int result = 0; result < numberOfRuns*4; result++) {
-            printf("%f\\\\", results[result]);
+            printf("%f ", results[result]);
             if((result+1)%numberOfRuns == 0) {
-                printf("\n");
+                printf("\n%d- ", counts[count]);
             }
         }
         free(results);
