@@ -142,7 +142,20 @@ where T: Clone + Eq + PartialOrd {
     }
 }   
 
+impl<T> Drop for FullBinTree<T>
+where T:Clone + Eq + PartialOrd {
+    fn drop(&mut self) {
+        self.root.take();
+    }
+}
 
+impl<T> Drop for Node<T> 
+where T:Clone + Eq + PartialOrd {
+    fn drop(&mut self) {
+        self.left.take();
+        self.right.take();
+    }
+}
 
 
 #[cfg(test)]
