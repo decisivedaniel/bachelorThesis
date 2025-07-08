@@ -42,38 +42,35 @@ where T: Clone + Eq + PartialOrd {
     }
 
     fn insert_at(&mut self, parent_link : Weak<RefCell<Node<T>>>,search : T) {
+        let set_node = if self.value < search {
+                &mut self.right
+            } else {
+                &mut self.left
+            };
         let new_node = Rc::new(RefCell::new(Node {
                 parent : Some(parent_link),
                 value : search,
                 left : None,
                 right : None
         }));
-        if self.value < new_node.borrow().value {
-            self.right = Some(new_node);
-        } else {
-            self.left = Some(new_node);
-        }
+        *set_node = Some(new_node);
     }
 
-    fn find_insert(&mut self, parent_link : Weak<RefCell<Node<T>>>, search : T) {
+    fn find_insert(&mut self, mut parent_link : Weak<RefCell<Node<T>>>, search : T) {
         if self.value == search { return; }
-        if self.value > search {
-            match self.left.as_mut() {
-                None => self.insert_at(parent_link, search),
-                Some(left) => {
-                    let new_parent_link = Rc::downgrade(left);
-                    return left.borrow_mut().find_insert(new_parent_link, search);
-                }
+        let find_side = 
+            if self.value > search {
+                self.left.as_mut()
+            } else {
+                self.right.as_mut()
+            };
+        match find_side {
+            None => self.insert_at(parent_link, search),
+            Some(node) => {
+                parent_link = Rc::downgrade(node);
+                return node.borrow_mut().find_insert(parent_link, search);
             }
-        } else {
-            match self.right.as_mut() {
-                None => self.insert_at(parent_link, search),
-                Some(right) => {
-                    let new_parent_link = Rc::downgrade(right);
-                    return right.borrow_mut().find_insert(new_parent_link, search);
-                }
-            }
-        }
+        } 
     }
 }
 
